@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from db.engine import get_async_session
 from db.models import Car, Client, Client_xref_Car, Detail, Model, Work
 from routers.car import post_car
-from routers.schemas import ClientScheme, ClientSchemeRead, OrderNewReadScheme, OrderScheme
+from routers.schemas import CarScheme, ClientScheme, ClientSchemeRead, OrderNewReadScheme, OrderScheme
 
 
 router = APIRouter(
@@ -57,13 +57,65 @@ async def post_client(data: ClientSchemeRead, session: AsyncSession = Depends(ge
     )
 
 
+@router.get('/client/{id}', response_model=ClientScheme)
+async def get_client(id: int, session: AsyncSession = Depends(get_async_session)):
+    client = await session.get(Client, id, options=(selectinload(Client.cars), selectinload(Client.cars, Car.model), ))
+
+    if client is None:
+        raise HTTPException(404, 'no client with such id')
+    
+    return client
+
+
+@router.delete('/client/{id}')
+async def delete_client(id: int, session: AsyncSession = Depends(get_async_session)):
+    client = await session.get(Client, id, options=(selectinload(Client.cars), selectinload(Client.cars, Car.model), ))
+
+    if client is None:
+        raise HTTPException(404, 'no client with such id')
+    
+    for xref in (await session.scalars(select(Client_xref_Car).where(Client_xref_Car.client_id == client.id))).all():
+        await session.delete(xref)
+
+    for car in client.cars:
+        await session.delete(car)
+
+    await session.delete(client)
+
+
+@router.post('/add/car', response_model=CarScheme)
+async def add_car(client_id: int, model_id: int, session: AsyncSession = Depends(get_async_session)):
+    client = await session.get(Client, client_id)
+
+    if client is None:
+        raise HTTPException(404, 'no client with such id')
+    
+    model = await session.get(Model, model_id)
+
+    if model is None:
+        raise HTTPException(404, 'no model with such id')
+    
+    car = Car(model_id=model_id)
+
+    session.add(car)
+    await session.commit()
+    await session.refresh(car)
+
+    session.add(Client_xref_Car(car_id=car.id, client_id=client.id))
+    await session.commit()
+
+    car.model = model
+
+    return car
+
+
 @router.get('/clients', response_model=list[ClientScheme])
 async def get_clients(session: AsyncSession = Depends(get_async_session)):
     return (await session.scalars(select(Client).options(selectinload(Client.cars), selectinload(Client.cars, Car.model)))).all()
 
 
-@router.post('/order/new_client')
-async def post_order(data: OrderNewReadScheme, session: AsyncSession = Depends(get_async_session)):
+@router.post('/order/new_client', response_model=OrderScheme)
+async def post_new_order(data: OrderNewReadScheme, session: AsyncSession = Depends(get_async_session)):
     cost = 0
     details = []
 
@@ -128,3 +180,7 @@ async def post_order(data: OrderNewReadScheme, session: AsyncSession = Depends(g
         details=details,
         works=works,
     )
+
+
+# @router.post('/order', response_model=OrderScheme)
+# async def post_order()

@@ -81,7 +81,11 @@ class OrderNewReadScheme(BaseModel):
     works_id: list[int] | None
 
 
-class OrderScheme(BaseModel):
+# class OrderReadScheme(BaseModel):
+#     client_id:
+
+
+class OrderScheme(BaseModel, ID):
     total: float
     
     car: CarScheme
