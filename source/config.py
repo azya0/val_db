@@ -22,10 +22,10 @@ class Settings(BaseSettings):
 
     @validator('POSTGRES_HOST', pre=True)
     def set_db_host(cls, value, values):
-        # if values.get("DEBUG"):
-        #     if values.get("HOST") == '0.0.0.0':
-        #         return 'localhost'
-        #     return values.get("HOST")
+        if values.get("DEBUG"):
+            if values.get("HOST") == '0.0.0.0':
+                return 'localhost'
+            return values.get("HOST")
         return value
 
     @validator('SQLALCHEMY_URL', pre=True)
