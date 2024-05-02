@@ -1,6 +1,6 @@
 import datetime
 
-from sqlalchemy import Column, String, Integer, Float, ForeignKey, DateTime, func
+from sqlalchemy import Column, String, Integer, Float, ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import as_declarative, relationship
 
 
@@ -51,14 +51,17 @@ class Car(Base):
     __tablename__ = 'car'
 
     model_id = Column(Integer, ForeignKey('model.id'), nullable=False)
+    is_active = Column(Boolean, default=True)
 
     model = relationship("Model", back_populates="cars", uselist=False)
     client = relationship("Client", secondary='client_xref_car', back_populates='cars', uselist=False)
+    order = relationship("Order", back_populates="car", uselist=False)
 
 
 class Client(Base, Human):
     __tablename__ = 'client'
 
+    is_active = Column(Boolean, default=True)
     cars = relationship("Car", secondary='client_xref_car', back_populates='client')
 
 
@@ -73,16 +76,22 @@ class Work(Base):
     __tablename__ = 'work'
 
     cost = Column(Float, default=0.0)
-    time_cost = Column(DateTime, nullable=False)
+    time_cost = Column(DateTime(timezone=True), nullable=False)
     name = Column(String(128), nullable=False)
 
 
 class Order(Base):
     __tablename__ = 'order'
 
+    client_id = Column(Integer, ForeignKey('client.id'), nullable=False)
     car_id = Column(Integer, ForeignKey('car.id'), nullable=False)
     client_id = Column(Integer, ForeignKey('client.id'), nullable=False)
     speedometer = Column(Float, default=0.0)
+
+    car = relationship("Car", back_populates="order", uselist=False)
+    details = relationship("Detail", secondary='order_xref_detail')
+    works = relationship("Work", secondary="order_xref_work")
+    client = relationship("Client", uselist=False)
 
 
 class Order_xref_Detail(Base):

@@ -14,7 +14,7 @@ router = APIRouter(
 )
 
 
-@router.post('/model', response_model=ModelScheme)
+@router.post('/model', name="Добавляет новую модель автомобиля в базу данных", response_model=ModelScheme)
 async def post_detail_type(name: str, session: AsyncSession = Depends(get_async_session)):
     model = Model(name=name)
 
@@ -25,12 +25,12 @@ async def post_detail_type(name: str, session: AsyncSession = Depends(get_async_
     return model
 
 
-@router.get('/models', response_model=list[ModelScheme])
+@router.get('/models', name="Выводит список всех моделей, известных сервису", response_model=list[ModelScheme])
 async def get_detail_types(session: AsyncSession = Depends(get_async_session)):
     return (await session.scalars(select(Model))).all()
 
 
-@router.delete('/model/{id}')
+@router.delete('/model/{id}', name="Удаляет модель автомобиля по ID")
 async def post_detail_type(id: int, session: AsyncSession = Depends(get_async_session)):
     to_delete = await session.get(Model, id)
 
@@ -40,7 +40,7 @@ async def post_detail_type(id: int, session: AsyncSession = Depends(get_async_se
     await session.delete(to_delete)
 
 
-@router.post('/car', response_model=CarScheme)
+@router.post('/car', name="Добавляет конкретный автомобиль в бд СТО", response_model=CarScheme)
 async def post_car(model_id: int, session: AsyncSession = Depends(get_async_session)):
     model = await session.get(Model, model_id)
 
@@ -58,6 +58,18 @@ async def post_car(model_id: int, session: AsyncSession = Depends(get_async_sess
     return car
 
 
-@router.get('/cars', response_model=list[CarScheme])
+@router.get('/cars', name="Выводит список всех автомобилей на учете СТО", response_model=list[CarScheme])
 async def get_cars(session: AsyncSession = Depends(get_async_session)):
-    return (await session.scalars(select(Car).options(selectinload(Car.model), ))).all()
+    return (await session.scalars(select(Car).filter(Car.is_active == True).options(selectinload(Car.model), ))).all()
+
+
+@router.delete('/car/{id}', name="Удаляет автомобиль по ID из мазы данных")
+async def delete_car(id: int, session: AsyncSession = Depends(get_async_session)):
+    car = await session.get(Car, id)
+
+    if car is None:
+        raise HTTPException(404, 'no car with such id')
+    
+    car.is_active = False
+    session.add(car)
+    await session.commit()

@@ -59,6 +59,16 @@ class ClientScheme(BaseModel, ID):
     cars: list[CarScheme]
 
 
+class ClientSchemeShort(BaseModel, ID):
+    first_name: str 
+    second_name: str
+    patronymic: str | None = None
+
+    class Config:
+        from_attributes = True
+
+
+
 class WorkSchemeRead(BaseModel):
     cost: float
     time_cost: datetime.datetime
@@ -77,18 +87,30 @@ class OrderNewReadScheme(BaseModel):
 
     model_id: int
 
-    details_id: list[int] | None
-    works_id: list[int] | None
+    details_id: list[int] | None = None
+    works_id: list[int] | None = None
 
 
-# class OrderReadScheme(BaseModel):
-#     client_id:
+class OrderSchemeRead(BaseModel):
+    details_id: list[int] | None = None
+    works_id: list[int] | None = None
 
 
 class OrderScheme(BaseModel, ID):
     total: float
     
+    client: ClientSchemeShort
     car: CarScheme
+    details: list[DetailScheme]
+    works: list[WorkScheme]
+    speedometer: float
+
+    class Config:
+        from_attributes = True
+
+
+class OtchetScheme(BaseModel):
+    total: float
 
     details: list[DetailScheme]
     works: list[WorkScheme]
