@@ -114,3 +114,11 @@ class OtchetScheme(BaseModel):
 
     details: list[DetailScheme]
     works: list[WorkScheme]
+
+
+class TestResults(BaseModel):
+    test_name: str
+
+    result_100000: int | None = None
+    result_10000: int | None = None
+    result_1000: int | None = None

@@ -1,4 +1,5 @@
 import datetime
+from typing import Annotated
 
 from sqlalchemy import Column, String, Integer, Float, ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import as_declarative, relationship
@@ -106,3 +107,35 @@ class Order_xref_Work(Base):
 
     order_id = Column(Integer, ForeignKey('order.id'), nullable=False)
     work_id = Column(Integer, ForeignKey('work.id'), nullable=False)
+
+
+MetaStr = Annotated[str, 255]
+DetailedInfoStr = Annotated[str, 2000]
+endl, tab = '\n', '\t'
+
+
+class TestModel1000(Base):
+    __tablename__ = "test_model_1000"
+
+    name = Column(String(64), nullable=True, unique=False)
+    some_string = Column(String(128), nullable=True, unique=False)
+    date = Column(DateTime(timezone=True), nullable=True)
+    fake_unique = Column(String(64), nullable=False, unique=False)
+
+
+class TestModel10000(Base):
+    __tablename__ = "test_model_10000"
+
+    name = Column(String(64), nullable=True, unique=False)
+    some_string = Column(String(128), nullable=True, unique=False)
+    date = Column(DateTime(timezone=True), nullable=True)
+    fake_unique = Column(String(64), nullable=False, unique=False)
+
+
+class TestModel100000(Base):
+    __tablename__ = "test_model_100000"
+
+    name = Column(String(64), nullable=True, unique=False)
+    some_string = Column(String(128), nullable=True, unique=False)
+    date = Column(DateTime(timezone=True), nullable=True)
+    fake_unique = Column(String(64), nullable=False, unique=False)
