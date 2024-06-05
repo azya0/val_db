@@ -17,9 +17,6 @@ router = APIRouter(
 
 @router.post('/client', name="Добавляет нового клиента СТО", response_model=ClientScheme)
 async def post_client(data: ClientSchemeRead, session: AsyncSession = Depends(get_async_session)):
-    if not len(data.car_models):
-        raise HTTPException(400, 'no car models')
-    
     models = []
 
     for model_id in data.car_models:
@@ -122,3 +119,27 @@ async def get_clients(session: AsyncSession = Depends(get_async_session)):
         client.cars = new_cars
     
     return data
+
+
+@router.patch('/sellCar/{car_id}/{new_owner_id}', name="Передает автомобиль по id")
+async def sellCar(car_id: int, new_owner_id: int, session: AsyncSession = Depends(get_async_session)):
+    car = await session.get(Car, car_id)
+
+    if car is None:
+        raise HTTPException(404, detail="no such car")
+
+    new_owner = await session.get(Client, new_owner_id)
+
+    if new_owner is None:
+        raise HTTPException(404, detail="no such client")
+    
+    old_connections = (await session.scalars(select(Client_xref_Car).where(Client_xref_Car.car_id == car_id))).all()
+
+    for connection in old_connections:
+        await session.delete(connection)
+    
+    new_connection = Client_xref_Car(car_id=car_id, client_id=new_owner_id)
+
+    session.add(new_connection)
+    await session.commit()
+    
