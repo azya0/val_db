@@ -1,13 +1,8 @@
-import asyncio
-from asyncio import WindowsSelectorEventLoopPolicy
-
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from typing_extensions import AsyncGenerator
 
 from config import get_settings
-
-asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
 
 async_engine = create_async_engine(
     url=get_settings().SQLALCHEMY_URL,
